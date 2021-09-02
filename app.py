@@ -15,14 +15,18 @@ mysql = MySQL(app)
 app.secret_key = 'mysecretkey'
 
 # home
+
+
 @app.route('/')
 def index():
     cur = mysql.connection.cursor()
     cur.execute('SELECT * FROM contacts')
     data = cur.fetchall()
-    return render_template('index.html', contacts = data)
+    return render_template('index.html', contacts=data)
 
 # add contact
+
+
 @app.route('/add_contact', methods=['POST'])
 def add_contact():
     if request.method == 'POST':
@@ -30,14 +34,13 @@ def add_contact():
         phone = request.form['phone']
         email = request.form['email']
         cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO contacts (full_name, phone, email) VALUES (%s,%s,%s)", (fullname, phone, email))
+        cur.execute(
+            "INSERT INTO contacts (full_name, phone, email) VALUES (%s,%s,%s)", (fullname, phone, email))
         mysql.connection.commit()
         flash('Contact Added Successfully')
-        
+
         return redirect(url_for('index'))
-        
-        
-    
+
 
 # edit contact
 @app.route('/edit/<id>')
@@ -45,9 +48,29 @@ def edit_contact(id):
     cur = mysql.connection.cursor()
     cur.execute('SELECT * FROM contacts WHERE id = %s', (id))
     data = cur.fetchall()
-    return render_template('edit-contact.html', contact = data[0])
+    return render_template('edit-contact.html', contact=data[0])
 
+
+@app.route('/update/<id>', methods=['POST'])
+def update_contact(id):
+    if request.method == 'POST':
+        fullname = request.form['fullname']
+        phone = request.form['phone']
+        email = request.form['email']
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            UPDATE contacts
+            SET full_name = %s,
+                email = %s,
+                phone = %s
+            WHERE id = %s
+        """, (fullname, email, phone, id))
+        flash('Contact Updated Successfully')
+        mysql.connection.commit()
+        return redirect(url_for('index'))
 # delete contact
+
+
 @app.route('/delete/<string:id>')
 def delete_contact(id):
     cur = mysql.connection.cursor()
@@ -56,5 +79,6 @@ def delete_contact(id):
     flash('Contact Removed Successfully')
     return redirect(url_for('index'))
 
+
 if __name__ == '__main__':
-    app.run(port = 5000, debug = True)
+    app.run(port=5000, debug=True)
